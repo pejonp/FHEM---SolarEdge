@@ -89,7 +89,7 @@ sub listfiles2{
             }
         }
         
-        open(my $fh, '>:raw', 'controls_vbus.txt');
+        open(my $fh, '>:raw', 'controls_SolarEdge.txt');
         
         foreach my $l (sort @lines){
             print $l;
