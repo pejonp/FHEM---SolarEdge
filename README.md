@@ -8,4 +8,4 @@ Modbusversion => 4.0.13 - 26.10.2018
 
 Update in FHEM:
 
-update all https://raw.githubusercontent.com/pejonp/vbus/master/controls_SolarEdge.txt
+update all https://raw.githubusercontent.com/pejonp/FHEM---SolarEdge/master/controls_SolarEdge.txt
