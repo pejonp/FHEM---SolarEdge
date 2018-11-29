@@ -1,5 +1,5 @@
 ##############################################
-# $Id: 98_SolarEdge.pm 0008 2018-11-04 22:00:00Z pejonp $
+# $Id: 98_SolarEdge.pm 0009 2018-11-29 22:00:00Z pejonp $
 #
 #	fhem Modul für Wechselrichter SolarEdge SE5K
 #	verwendet Modbus.pm als Basismodul für die eigentliche Implementation des Protokolls.
@@ -80,9 +80,10 @@ my %SolarEdgeparseInfo = (
                                   'type' => 'VT_String',
                                'defPoll' => '0',
                        },
-          "h40020" =>  {       'reading' => 'C_Model',
+          "h40020" =>  {       'reading' => 'Block_C_Model',
                                   'type' => 'VT_String',
                                'defPoll' => '0',
+                                  'expr' => 'ExprMppt($hash,$name,"C_Model",$val[0],0,0,0,0)',	# conversion of raw value to visible value
                        },
           "h40044" =>  {       'reading' => 'C_Version',
                                   'type' => 'VT_String',
@@ -317,7 +318,7 @@ SolarEdge_Initialize($)
 sub ExprMppt($$$$$$$$)		{								# Berechnung Wert mit ScaleFactor unter Beachtung Operating_State
 #	Expr, conversion of raw value to visible value
 	my $hash			= $_[0];							# Übergabe Geräte-Hash
-	my $DevName			= $_[1];							# Übergabe Geräte-Name
+	my $DevName			= $_[1];						# Übergabe Geräte-Name
 	my $ReadingName		= $_[2];
   my @vval;
  $vval[0]			= $_[3];
@@ -337,33 +338,36 @@ sub ExprMppt($$$$$$$$)		{								# Berechnung Wert mit ScaleFactor unter Beachtu
     Log3 $hash, 4, "SolarEdge $DevName : ".$vval[0]." Reg :".$ReadingName;
     my $WertNeu = @vval." ".$vval[0]." ".$vval[1]." ".$vval[2]." ".$vval[3]." ".$vval[4] ;
 
-  if ($ReadingName eq "I_AC_Current") {
-      readingsBulkUpdate($hash, $ReadingName, $vval[0] * 10 ** $vval[4]);
-      readingsBulkUpdate($hash, $ReadingName."L1", $vval[1] * 10 ** $vval[4]);
-      readingsBulkUpdate($hash, $ReadingName."L2", $vval[2] * 10 ** $vval[4]);
-      readingsBulkUpdate($hash, $ReadingName."L3", $vval[3] * 10 ** $vval[4]);
-      readingsBulkUpdate($hash, $ReadingName."_SF", $vval[4]);
+  if ($ReadingName eq "C_Model") {
+        Log3 $hash, 4, "SolarEdge $DevName Model : ".$vval[0].":".$vval[1].":".$vval[2].":".$vval[3].":".$vval[4];
+        $hash->{MODEL} = $vval[0];
+        readingsBulkUpdate($hash, $ReadingName,$vval[0]);
+  } elsif ($ReadingName eq "I_AC_Current") {
+        readingsBulkUpdate($hash, $ReadingName, $vval[0] * 10 ** $vval[4]);
+        readingsBulkUpdate($hash, $ReadingName."L1", $vval[1] * 10 ** $vval[4]);
+        readingsBulkUpdate($hash, $ReadingName."L2", $vval[2] * 10 ** $vval[4]);
+        readingsBulkUpdate($hash, $ReadingName."L3", $vval[3] * 10 ** $vval[4]);
+        readingsBulkUpdate($hash, $ReadingName."_SF", $vval[4]);
   } elsif ($ReadingName eq "I_AC_Energy_WH_kWh") {
-      # Anfang I_AC_Energy_WH_kWh (Today, Week,...)
-      my $energy_pv = ReadingsVal($DevName,$ReadingName,-1)*1000;
-      my $ts_energy_today = ReadingsTimestamp($DevName,"pv_energytoday",0);
-     # my ($Rsec,$Rmin,$Rhour,$Rmday,$Rmonth,$Ryear,$Rwday,$Ryday,$Risdst) = localtime($ts_energy_today);
-     #  2018-10-29 15:33:00
-      my $Rmonth = substr($ts_energy_today,5,2); 
-      my $energy_today = ReadingsVal($DevName,"pv_energytoday",0);
-      my $datum1 = substr($ts_energy_today,0,10);
+        # Anfang I_AC_Energy_WH_kWh (Today, Week,...)
+        my $energy_pv = ReadingsVal($DevName,$ReadingName,-1)*1000;
+        my $ts_energy_today = ReadingsTimestamp($DevName,"pv_energytoday",0);
+        # my ($Rsec,$Rmin,$Rhour,$Rmday,$Rmonth,$Ryear,$Rwday,$Ryday,$Risdst) = localtime($ts_energy_today);
+        #  2018-10-29 15:33:00
+        my $Rmonth = substr($ts_energy_today,5,2); 
+        my $energy_today = ReadingsVal($DevName,"pv_energytoday",0);
+        my $datum1 = substr($ts_energy_today,0,10);
 
-      Log3 $hash, 4, "SolarEdge TimeStamp PV-Energie : $ts_energy_today : D1: $datum1 : $time_now :  $datum0 ";  
-      Log3 $hash, 4, "SolarEdge Jahr Monat PV-Energie: $Rmonth : "."PV_".($Pyear2)."_".($Pmonth+1)." ----";      
-      
-      my $energy_time =   $vval[0] * 10 ** $vval[1];
-      
-      if ($energy_pv <= 0){
+        Log3 $hash, 4, "SolarEdge TimeStamp PV-Energie : $ts_energy_today : D1: $datum1 : $time_now :  $datum0 ";  
+        Log3 $hash, 4, "SolarEdge Jahr Monat PV-Energie: $Rmonth : "."PV_".($Pyear2)."_".($Pmonth+1)." ----";      
+        
+        my $energy_time =   $vval[0] * 10 ** $vval[1];
+        if ($energy_pv <= 0){
           readingsBulkUpdate($hash, "pv_energytoday", "0"); 
-      }else{
-         if ($datum0 eq $datum1 ){ # Prüfung gleicher Tag
+        }else{
+           if ($datum0 eq $datum1 ){ # Prüfung gleicher Tag
               readingsBulkUpdate($hash, "pv_energytoday", $energy_today + ($energy_time - $energy_pv) );         
-         } else {
+          } else {
               my $e_week = ReadingsVal($DevName,"pv_energytoweek",0);
               readingsBulkUpdate($hash, "pv_energytoweek", $e_week +$energy_today);  
               if ( ($Pmonth+1) eq $Rmonth){  # Prüfung gleicher Monat
@@ -377,11 +381,11 @@ sub ExprMppt($$$$$$$$)		{								# Berechnung Wert mit ScaleFactor unter Beachtu
               readingsBulkUpdate($hash, "pv_energytoday", "0");        
          }
       }
-      readingsBulkUpdate($hash, $ReadingName, $energy_time / 1000) ;
-      readingsBulkUpdate($hash, $ReadingName."_SF", $vval[1]);
+        readingsBulkUpdate($hash, $ReadingName, $energy_time / 1000) ;
+        readingsBulkUpdate($hash, $ReadingName."_SF", $vval[1]);
       
-      Log3 $hash, 4, "SolarEdge PV-Energie : $energy_today :  $energy_time : $energy_pv  ";
-      # Ende  I_AC_Energy_WH_kWh (Today, Week,...)
+        Log3 $hash, 4, "SolarEdge PV-Energie : $energy_today :  $energy_time : $energy_pv  ";
+        # Ende  I_AC_Energy_WH_kWh (Today, Week,...)
   }else{
       readingsBulkUpdate($hash, $ReadingName, $vval[0] * 10 ** $vval[1]);
       readingsBulkUpdate($hash, $ReadingName."_SF", $vval[1]);
