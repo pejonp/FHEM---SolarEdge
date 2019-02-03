@@ -1,5 +1,5 @@
 ##############################################
-# $Id: 98_SolarEdge.pm 0009 2018-11-29 22:00:00Z pejonp $
+# $Id: 98_SolarEdge.pm 0013 2019-02-03 22:00:00Z pejonp $
 #
 #	fhem Modul für Wechselrichter SolarEdge SE5K
 #	verwendet Modbus.pm als Basismodul für die eigentliche Implementation des Protokolls.
@@ -43,15 +43,16 @@ my $SolarEdge_Version = '0001 - 16.10.2018';
 my %SolarEdgedeviceInfo = (
     "h" =>  { 
         'combine' => '30',
-        'defPoll' => '1',
+        'defPoll' => '1',   
     },
     "type-VT_String" =>  {  
         'decode' => 'cp850',
         'encode' => 'utf8',
-        'expr' => '$val =~ s/[\00]+//gr',
-        'len' => '8',
-        'revRegs' => '0',
+          'expr' => '$val =~ s/[\00]+//gr',
+           'len' => '8',
+       'revRegs' => '0',
         'unpack' => 'a16',
+     'poll' => 'once',  # only poll once after define (or after a set)
     },
     "type-VT_String4" =>  { 
         'decode' => 'cp850',
@@ -73,35 +74,32 @@ my %SolarEdgeparseInfo = (
                                'reading' => 'C_SunSpec_ID',
                                'revRegs' => '0',
                                 'unpack' => 'a4',
-                               'defPoll' => '0',
+                                  'poll' => 'once',
                        },
           "h40004" =>  { # 40005 16 C_Hersteller String(32) Bei SunSpec eingetragener Wert = " SolarEdge "
                                'reading' => 'C_Manufacturer',
                                   'type' => 'VT_String',
-                               'defPoll' => '0',
-                       },
+                                                 },
           "h40020" =>  {       'reading' => 'Block_C_Model',
                                   'type' => 'VT_String',
-                               'defPoll' => '0',
                                   'expr' => 'ExprMppt($hash,$name,"C_Model",$val[0],0,0,0,0)',	# conversion of raw value to visible value
                        },
           "h40044" =>  {       'reading' => 'C_Version',
                                   'type' => 'VT_String',
-                               'defPoll' => '0',
                        },
           "h40052" =>  {       'reading' => 'C_SerialNumber',
                                   'type' => 'VT_String',
-                               'defPoll' => '0',
                        },
           "h40068" =>  {	#
                      					'reading'  => 'C_DeviceAddress',
                                'defPoll' => '0',
+                                  'poll' => 'once',
                        },
           "h40069" =>	{	# 40070 1 C_SunSpec_DID uint16 101 = Einphasig 102 = Spaltphase1 103 = Dreiphasig
                      					'reading'	=> 'C_SunSpec_DID',			# name of the reading for this value
                         				  'len' => '1' ,
                                   'map' => '101:Einphasig, 102:Spaltphase1, 103:Dreiphasig',
-                              'defPoll' => '0',
+                                 'poll' => 'once',
                				},
   #  "h40071"	=>	{	# 40072 1 I_AC_Strom uint16 Ampere AC-Gesamtstromwert
 	#				'reading'		=> 'I_AC_Current',			# name of the reading for this value
@@ -348,6 +346,16 @@ sub ExprMppt($$$$$$$$)		{								# Berechnung Wert mit ScaleFactor unter Beachtu
         readingsBulkUpdate($hash, $ReadingName."L2", $vval[2] * 10 ** $vval[4]);
         readingsBulkUpdate($hash, $ReadingName."L3", $vval[3] * 10 ** $vval[4]);
         readingsBulkUpdate($hash, $ReadingName."_SF", $vval[4]);
+  } elsif ($ReadingName eq "I_AC_Power") {
+        my $ACPOWER =   ($vval[0] * 10 ** $vval[1]);
+         Log3 $hash, 4, "SolarEdge I_AC_Power_0 : ".$vval[0]." ACPOWER :".$ACPOWER;
+        if ($ACPOWER < 0 || $ACPOWER > 15000){
+          $ACPOWER = 0;
+        }
+         Log3 $hash, 4, "SolarEdge I_AC_Power_1 : ".$vval[0]." ACPOWER :".$ACPOWER;
+        readingsBulkUpdate($hash, $ReadingName, $ACPOWER);
+        readingsBulkUpdate($hash, $ReadingName."_SF", $vval[1]);
+        
   } elsif ($ReadingName eq "I_AC_Energy_WH_kWh") {
         # Anfang I_AC_Energy_WH_kWh (Today, Week,...)
         my $energy_pv = ReadingsVal($DevName,$ReadingName,-1)*1000;

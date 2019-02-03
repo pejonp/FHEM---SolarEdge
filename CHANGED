@@ -1,2 +1,6 @@
+29.11.2018
+MODEL = SolarEdge C_Model
 4.11.2018
 Readings: pv_energy pv_energytoday pv_energytoweek pv_energytomont ...
+03.02.2019
+'poll' => 'once', für statische Werte => C_SunSpec_ID,C_Manufacturer,C_Version,C_SerialNumber,C_DeviceAddress,C_SunSpec_DID
