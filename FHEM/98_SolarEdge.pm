@@ -1,5 +1,5 @@
 ##############################################
-# $Id: 98_SolarEdge.pm 0013 2019-02-03 22:00:00Z pejonp $
+# $Id: 98_SolarEdge.pm 0016 2019-04-22 22:00:00Z pejonp $
 #
 #	fhem Modul für Wechselrichter SolarEdge SE5K
 #	verwendet Modbus.pm als Basismodul für die eigentliche Implementation des Protokolls.
@@ -38,7 +38,7 @@ sub SolarEdge_Define($$);		# wird beim 'define' von AESGI-Protokoll Gerät aufge
 sub SolarEdge_Notify($$);		# wird beim 'Notify' vom Device aufgerufen
 sub ExprMppt($$$$$$$$);				# Berechnung Wert mit ScaleFactor unter Beachtung Operating_State
 
-my $SolarEdge_Version = '0001 - 16.10.2018';
+my $SolarEdge_Version = '0016 - 22.04.2019';
 
 my %SolarEdgedeviceInfo = (
     "h" =>  { 
@@ -346,14 +346,14 @@ sub ExprMppt($$$$$$$$)		{								# Berechnung Wert mit ScaleFactor unter Beachtu
         readingsBulkUpdate($hash, $ReadingName."L2", $vval[2] * 10 ** $vval[4]);
         readingsBulkUpdate($hash, $ReadingName."L3", $vval[3] * 10 ** $vval[4]);
         readingsBulkUpdate($hash, $ReadingName."_SF", $vval[4]);
-  } elsif ($ReadingName eq "I_AC_Power") {
-        my $ACPOWER =   ($vval[0] * 10 ** $vval[1]);
-         Log3 $hash, 4, "SolarEdge I_AC_Power_0 : ".$vval[0]." ACPOWER :".$ACPOWER;
-        if ($ACPOWER < 0 || $ACPOWER > 15000){
-          $ACPOWER = 0;
+  } elsif ($ReadingName eq "I_AC_Power" || $ReadingName eq "I_DC_Power") {
+        my $POWER =   ($vval[0] * 10 ** $vval[1]);
+         Log3 $hash, 4, "SolarEdge I_Power_0 : ".$vval[0]." POWER :".$POWER;
+        if ($POWER < 0 || $POWER > 15000){
+          $POWER = 0;
         }
-         Log3 $hash, 4, "SolarEdge I_AC_Power_1 : ".$vval[0]." ACPOWER :".$ACPOWER;
-        readingsBulkUpdate($hash, $ReadingName, $ACPOWER);
+         Log3 $hash, 4, "SolarEdge I_Power_1 : ".$vval[0]." POWER :".$POWER;
+        readingsBulkUpdate($hash, $ReadingName, $POWER);
         readingsBulkUpdate($hash, $ReadingName."_SF", $vval[1]);
         
   } elsif ($ReadingName eq "I_AC_Energy_WH_kWh") {
