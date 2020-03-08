@@ -40,7 +40,7 @@ sub SolarEdge_Notify($$);    # wird beim 'Notify' vom Device aufgerufen
 sub ExprMppt($$$$$$$$);      # Berechnung Wert mit ScaleFactor unter Beachtung Operating_State
 sub ExprMeter($$$$$$$$$$$$);  # Berechnung Wert mit ScaleFactor für Meter 1
 
-my $SolarEdge_Version = '0022 - 13.07.2019 09:09';
+my $SolarEdge_Version = '0023 - 08.03.2020';
 
 my %SolarEdgedeviceInfo = (
     "h" => {
@@ -60,10 +60,11 @@ my %SolarEdgedeviceInfo = (
         'decode'  => 'cp850',
         'encode'  => 'utf8',
         'expr'    => '$val =~ s/[\00]+//gr',
-        'len'     => '4',
+        'len'     => '5',
         'revRegs' => '0',
         'unpack'  => 'a8',
     },
+    
 );
 
 my %SolarEdgeparseInfo = (
@@ -873,7 +874,7 @@ sub HelperConsumption($$)
 <ul>
     SolarEdge uses the low level Modbus module to provide a way to communicate with SolarEdge inverter.
 	It defines the modbus input and holding registers and reads them in a defined interval.
-  Modbusversion => 4.0.13 - 26.10.2018
+  Modbusversion => Modbus 4.1.5 - 17.9.2019
 
 	<br>
     <b>Prerequisites</b>
