@@ -4,3 +4,5 @@ MODEL = SolarEdge C_Model
 Readings: pv_energy pv_energytoday pv_energytoweek pv_energytomont ...
 03.02.2019
 'poll' => 'once', für statische Werte => C_SunSpec_ID,C_Manufacturer,C_Version,C_SerialNumber,C_DeviceAddress,C_SunSpec_DID
+08.03.2020
+Anpassungen von CaptainRoot übernommen (Meter_1 mit aufgenommen)

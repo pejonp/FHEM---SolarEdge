@@ -1,10 +1,10 @@
 # SolarEdge FHEM-Modul
 
-4.11.2018 
+08.03.2020 
 
 SolarEdge uses the low level Modbus module to provide a way to communicate with SolarEdge inverter.
 It defines the modbus input and holding registers and reads them in a defined interval.
-Modbusversion => 4.0.13 - 26.10.2018
+Modbusversion => Modbus 4.1.5 - 17.9.2019
 
 Update in FHEM:
 
