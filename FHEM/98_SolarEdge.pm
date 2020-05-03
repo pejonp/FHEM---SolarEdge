@@ -1,5 +1,5 @@
 ##############################################
-# $Id: 98_SolarEdge.pm 0023 2020-03-08 17:54:00Z pejonp $
+# $Id: 98_SolarEdge.pm 0024 2020-05-03 17:54:00Z pejonp $
 #
 #	fhem Modul für Wechselrichter SolarEdge SE5K
 #	verwendet Modbus.pm als Basismodul für die eigentliche Implementation des Protokolls.
@@ -25,20 +25,91 @@
 # 2018-10-15  weiter ... pejonp
 # 2018-10-29  X_PV_Energy X_PV_EnergyToday X_PV_EnergyCurrentWeek pv_energytomont ...
 # 2020-03-08  Anpassungen von CaptainRoot (https://github.com/CaptainRoot/FHEM---SolarEdge) FHEM-Forum (https://forum.fhem.de/index.php/topic,80767.msg947778.html#msg947778) übernommen
+# 2020-04-20  PBP  :pejonp
+# 2020-05-03  Undefined subroutine &SolarEdge::ExprMppt (PBP) :pejonp 
 
-#defmod SEdge SolarEdge 3 60 192.168.2.7:20108 RTU
 
-package main;
 
 use strict;
 use warnings;
-use Time::Local;
 
-sub SolarEdge_Initialize($);
-sub SolarEdge_Define($$);    # wird beim 'define' von AESGI-Protokoll Gerät aufgerufen
-sub SolarEdge_Notify($$);    # wird beim 'Notify' vom Device aufgerufen
-sub ExprMppt($$$$$$$$);      # Berechnung Wert mit ScaleFactor unter Beachtung Operating_State
-sub ExprMeter($$$$$$$$$$$$);  # Berechnung Wert mit ScaleFactor für Meter 1
+sub ExprMppt {
+    my ( $hash, $DevName, $ReadingName, $vval_0 , $vval_1 , $vval_2 , $vval_3 , $vval_4 ) = @_;
+    return SolarEdge_ExprMppt( $hash, $DevName, $ReadingName, $vval_0 , $vval_1 , $vval_2 , $vval_3 , $vval_4 );
+}
+
+sub ExprMeter {
+    my ( $hash, $DevName, $ReadingName, $vval_0 , $vval_1 , $vval_2 , $vval_3 , $vval_4 , $vval_5 , $vval_6 , $vval_7 , $vval_8 ) = @_;
+    return SolarEdge_ExprMppt( $hash, $DevName, $ReadingName, $vval_0 , $vval_1 , $vval_2 , $vval_3 , $vval_4, $vval_5 , $vval_6 , $vval_7 , $vval_8 );
+}
+
+
+package FHEM::SolarEdge;
+
+no if $] >= 5.017011, warnings => 'experimental::smartmatch';
+#no warnings 'portable';    # Support for 64-bit ints required
+use Time::Local;
+use Time::HiRes qw(gettimeofday usleep);
+use Device::SerialPort;
+use GPUtils qw(GP_Import GP_Export);
+use Scalar::Util qw(looks_like_number);
+use feature qw/say switch/;
+use SetExtensions;
+
+use FHEM::Meta;
+main::LoadModule( 'Modbus');
+main::LoadModule( 'ModbusAttr');
+
+
+
+## Import der FHEM Funktionen
+#-- Run before package compilation
+BEGIN {
+
+    # Import from main context
+    GP_Import(
+        qw(
+          readingsBulkUpdate
+          readingsBeginUpdate
+          readingsEndUpdate
+          defs
+          modules
+          Log3
+          attr
+          readingFnAttributes
+          AttrVal
+          ReadingsVal
+          Value
+          FmtDateTime
+          strftime
+          GetTimeSpec
+          InternalTimer
+          AssignIoPort
+          DevIo_CloseDev
+          DevIo_OpenDev
+          DevIo_SimpleWrite
+          DevIo_SimpleRead
+          RemoveInternalTimer
+          getUniqueId
+          getKeyValue
+          TimeNow
+          Dispatch
+          Initialize
+          ModbusLD_Initialize
+          ReadingsTimestamp
+           )
+    );
+}
+
+#-- Export to main context with different name
+GP_Export(
+    qw(
+      Initialize
+      ExprMppt
+      ExprMeter
+      )
+);
+
 
 my $SolarEdge_Version = '0023 - 08.03.2020';
 
@@ -440,24 +511,21 @@ my %SolarEdgeMeter1parseInfo = (
 );
 
 #####################################
-sub SolarEdge_Initialize($)
+sub Initialize()
 {
-    my ($hash) = @_;
+    my $hash = shift;
 
     my %SolarEdgeparseInfoAll = ( %SolarEdgeparseInfo, %SolarEdgeMeter1parseInfo );
 
-    require "$attr{global}{modpath}/FHEM/98_Modbus.pm";
-    require "$attr{global}{modpath}/FHEM/DevIo.pm";
-
-    $hash->{DefFn} = "SolarEdge_Define";
-
-    #   $hash->{UndefFn}   = "SolarEdge_Undef";
-    #   $hash->{ParseFn}   = "SolarEdge_Parse";
-    #   $hash->{NotifyFn}   = "SolarEdge_Notify";
-    $hash->{AttrFn}     = "SolarEdge_Attr";
+    #require "$attr{global}{modpath}/FHEM/98_Modbus.pm";
+    #require "$attr{global}{modpath}/FHEM/DevIo.pm";
+   
+    
+    $hash->{DefFn} = \&Define;
+    $hash->{AttrFn}     = \&Attr;
     $hash->{parseInfo}  = \%SolarEdgeparseInfoAll;    # defines registers for this Modbus Defive
     $hash->{deviceInfo} = \%SolarEdgedeviceInfo;      # defines properties of the device like
-    ModbusLD_Initialize($hash);                       # Generic function of the Modbus module does the rest
+    ModbusLD_Initialize($hash);        # Generic function of the Modbus module does the rest
 
     $hash->{AttrList} =
         $hash->{AttrList}
@@ -470,22 +538,23 @@ sub SolarEdge_Initialize($)
       "polldelay-.*" . " " .                          # overwrite polldelay with polldelay-ReadingName
       "errorHandlingOf" . " ";                        # overwrite polldelay with polldelay-ReadingName
 
+      return;
 }
 
 ###################################
-sub ExprMppt($$$$$$$$)
+sub ExprMppt()
 {                                                     # Berechnung Wert mit ScaleFactor unter Beachtung Operating_State
 
     #	Expr, conversion of raw value to visible value
-    my $hash        = $_[0];                          # Übergabe Geräte-Hash
-    my $DevName     = $_[1];                          # Übergabe Geräte-Name
-    my $ReadingName = $_[2];
     my @vval;
-    $vval[0] = $_[3];
-    $vval[1] = $_[4];
-    $vval[2] = $_[5];
-    $vval[3] = $_[6];
-    $vval[4] = $_[7];
+    my $hash        = shift;                          # Übergabe Geräte-Hash
+    my $DevName     = shift;                          # Übergabe Geräte-Name
+    my $ReadingName = shift;
+    $vval[0] = shift;
+    $vval[1] = shift;
+    $vval[2] = shift;
+    $vval[3] = shift;
+    $vval[4] = shift;
 
     # Register
     my @SolarEdge_readings =
@@ -609,23 +678,23 @@ sub ExprMppt($$$$$$$$)
 }
 
 ###################################
-sub ExprMeter($$$$$$$$$$$$)
+sub ExprMeter()
 {    # Berechnung Wert mit ScaleFactor unter Beachtung Operating_State
 
     #	Expr, conversion of raw value to visible value
-    my $hash        = $_[0];    # Übergabe Geräte-Hash
-    my $DevName     = $_[1];    # Übergabe Geräte-Name
-    my $ReadingName = $_[2];
     my @vval;
-    $vval[0] = $_[3];
-    $vval[1] = $_[4];
-    $vval[2] = $_[5];
-    $vval[3] = $_[6];
-    $vval[4] = $_[7];
-    $vval[5] = $_[8];
-    $vval[6] = $_[9];
-    $vval[7] = $_[10];
-    $vval[8] = $_[11];
+    my $hash        = shift;    # Übergabe Geräte-Hash
+    my $DevName     = shift;    # Übergabe Geräte-Name
+    my $ReadingName = shift;
+    $vval[0] = shift;
+    $vval[1] = shift;
+    $vval[2] = shift;
+    $vval[3] = shift;
+    $vval[4] = shift;
+    $vval[5] = shift;
+    $vval[6] = shift;
+    $vval[7] = shift;
+    $vval[8] = shift;
 
     # Register
     my ( $Psec, $Pmin, $Phour, $Pmday, $Pmonth, $Pyear, $Pwday, $Pyday, $Pisdst ) = localtime( time() + 61 );
@@ -848,10 +917,10 @@ sub ExprMeter($$$$$$$$$$$$)
     return $WertNeu;
 }
 
-sub HelperConsumption($$)
+sub HelperConsumption()
 {
-    my $hash    = $_[0];    # Übergabe Geräte-Hash
-    my $DevName = $_[1];    # Übergabe Geräte-Name
+    my $hash    = shift;    # Übergabe Geräte-Hash
+    my $DevName = shift;    # Übergabe Geräte-Name
 
     my $powerInverter = ReadingsVal( $DevName, "I_AC_Power",           -1 );
     my $powerGrid     = ReadingsVal( $DevName, "X_Meter_1_M_AC_Power", -1 );
@@ -861,6 +930,7 @@ sub HelperConsumption($$)
     $consumption = $powerInverter - $powerGrid;
 
     readingsBulkUpdate( $hash, "X_Calculated_Consumption", $consumption );
+    return;
 
 }
 
