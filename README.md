@@ -9,3 +9,16 @@ Modbusversion => Modbus 4.1.5 - 17.9.2019
 Update in FHEM:
 
 update all https://raw.githubusercontent.com/pejonp/FHEM---SolarEdge/master/controls_SolarEdge.txt
+
+
+When your devices are successfully created, please call
+
+fheminfo send
+
+to be part of the anonymous device statistics. (Search for SplarEdge to see models, that are already in use.)
+
+So I have the chance to see if new devices must be supported.
+
+attr global sendStatistics onUpdate
+
+must set.
