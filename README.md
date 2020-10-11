@@ -13,12 +13,12 @@ update all https://raw.githubusercontent.com/pejonp/FHEM---SolarEdge/master/cont
 
 When your devices are successfully created, please call
 
-fheminfo send
+		fheminfo send
 
 to be part of the anonymous device statistics. (Search for SplarEdge to see models, that are already in use.)
 
 So I have the chance to see if new devices must be supported.
 
-attr global sendStatistics onUpdate
+		attr global sendStatistics onUpdate
 
 must set.
