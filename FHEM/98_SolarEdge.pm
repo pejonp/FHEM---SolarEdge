@@ -1,5 +1,5 @@
 ##############################################
-# $Id: 98_SolarEdge.pm 0026 2020-13-10 17:54:00Z pejonp $
+# $Id: 98_SolarEdge.pm 0027 2020-14-10 17:54:00Z pejonp $
 #
 #	fhem Modul für Wechselrichter SolarEdge SE5K
 #	verwendet Modbus.pm als Basismodul für die eigentliche Implementation des Protokolls.
@@ -438,34 +438,43 @@ my %SolarEdgeMeter1parseInfo = (
         'expr' => 'ExprMeter($hash,$name,"X_Meter_1_M_AC_Current",$val[0],$val[1],$val[2],$val[3],$val[4],0,0,0,0)'
         ,                                            # conversion of raw value to visible value
     },
-    "h40195" => {                                    #Line to Neutral AC Voltage (average of activephases)
-        'reading' => 'X_Meter_1_M_AC_Voltage_LN',
-        'expr'    => '$val/100',
-        'setexpr' => '$val',
+    
+     "h40195" => {    #  #Line to Neutral AC Voltage (average of activephases) 40195 to 40203
+        'len' => '9',    #M_AC_Voltage_LN, M_AC_Voltage_AN, M_AC_Voltage_BN, M_AC_Voltage_CN, M_AC_Voltage_LL, M_AC_Voltage_AB, M_AC_Voltage_BC, M_AC_Voltage_CA, M_AC_Voltage_SF  
+        'reading' => 'X_Meter_1_Block_AC_Voltage',
+        'unpack'  => 'nnnnnnnns>', # 'NNNNNNNNs>',
+        'expr'    => 'ExprMeter($hash,$name,"X_Meter_1_M_AC_Voltage",$val[0],$val[1],$val[2],$val[3],$val[4],$val[5],$val[6],$val[7],$val[8])'
+        ,                 # conversion of raw value to visible value
     },
-    "h40196" => {                                    #Phase A to Neutral AC Voltage
-        'reading' => 'X_Meter_1_M_AC_Voltage_AN',
-        'expr'    => '$val/100',
-        'setexpr' => '$val',
-    },
-    "h40197" => {                                    #Phase B to Neutral AC Voltage
-        'reading' => 'X_Meter_1_M_AC_Voltage_BN',
-        'expr'    => '$val/100',
-        'setexpr' => '$val',
-    },
-    "h40198" => {                                    #Phase C to Neutral AC Voltage
-        'reading' => 'X_Meter_1_M_AC_Voltage_CN',
-        'expr'    => '$val/100',
-        'setexpr' => '$val',
-    },
-
-    "h40199" => {                                    # 40199 (Len 5) 40199 to 40202
-        'len'     => '5',                               #M_AC_Voltage_LL, M_AC_Voltage_AB, M_AC_Voltage_BC, M_AC_Voltage_CA, M_AC_Voltage_SF,
-        'reading' => 'X_Meter_1_Block_AC_Voltage_LL',
-        'unpack'  => 'nnnns>',
-        'expr' => 'ExprMeter($hash,$name,"X_Meter_1_M_AC_Voltage",$val[0],$val[1],$val[2],$val[3],$val[4],0,0,0,0)'
-        ,                                               # conversion of raw value to visible value
-    },
+    
+    #"h40195" => {                                    #Line to Neutral AC Voltage (average of activephases)
+    #    'reading' => 'X_Meter_1_M_AC_Voltage_LN',
+    #    'expr'    => '$val/100',
+    #    'setexpr' => '$val',
+    #},
+    #"h40196" => {                                    #Phase A to Neutral AC Voltage
+    #    'reading' => 'X_Meter_1_M_AC_Voltage_AN',
+    #    'expr'    => '$val/100',
+    #    'setexpr' => '$val',
+    #},
+    #"h40197" => {                                    #Phase B to Neutral AC Voltage
+    #    'reading' => 'X_Meter_1_M_AC_Voltage_BN',
+    #    'expr'    => '$val/100',
+    #    'setexpr' => '$val',
+    #},
+    #"h40198" => {                                    #Phase C to Neutral AC Voltage
+    #    'reading' => 'X_Meter_1_M_AC_Voltage_CN',
+    #    'expr'    => '$val/100',
+    #    'setexpr' => '$val',
+    #},
+    #"h40199" => {                                    # 40199 (Len 5) 40199 to 40202
+    #    'len'     => '5',                               #M_AC_Voltage_LL, M_AC_Voltage_AB, M_AC_Voltage_BC, M_AC_Voltage_CA, M_AC_Voltage_SF,
+    #    'reading' => 'X_Meter_1_Block_AC_Voltage_LL',
+    #    'unpack'  => 'nnnns>',
+    #    'expr' => 'ExprMeter($hash,$name,"X_Meter_1_M_AC_Voltage",$val[0],$val[1],$val[2],$val[3],$val[4],0,0,0,0)'
+    #    ,                                               # conversion of raw value to visible value
+    #},
+    
     "h40204" => {                                       # 40086 (Len 2) 40086 to 40087 AC Frequency
         'len'     => '2',                                                                                  # M_AC_Freq, M_AC_Freq_SF
         'reading' => 'X_Meter_1_Block_AC_Frequency',
@@ -481,43 +490,43 @@ my %SolarEdgeMeter1parseInfo = (
           'ExprMeter($hash,$name,"X_Meter_1_M_AC_Power",$val[0],$val[1],$val[2],$val[3],$val[4],0,0,0,0)',  # conversion of raw value to visible value
     },
 
-    "h40211" => {    #Apparent Power 40211 (Len 5) 40211 to 40215
-        'len'     => '5',                       #M_AC_VA, M_AC_VA_A, M_AC_VA_B, M_AC_VA_C, M_AC_VA_SF,
-        'reading' => 'X_Meter_1_Block_AC_VA',
-        'unpack'  => 'nnnns>', #'s>s>s>s>n!',   # 's>s>s>s>s>'
-        'expr' =>
-          'ExprMeter($hash,$name,"X_Meter_1_M_AC_VA",$val[0],$val[1],$val[2],$val[3],$val[4],0,0,0,0)',    # conversion of raw value to visible value
-    },
-    "h40216" => {    #Reactive Power 40216 (Len 5) 40215 to 40220
-        'len'     => '5',                        #M_AC_VAR, M_AC_VAR_A, M_AC_VAR_B, M_AC_VAR_C, M_AC_VAR_SF,
-        'reading' => 'X_Meter_1_Block_AC_VAR',
-        'unpack'  => 'nnnns>',  #'s>s>s>s>n!',  # 's>s>s>s>s>'
-        'expr' =>
-          'ExprMeter($hash,$name,"X_Meter_1_M_AC_VAR",$val[0],$val[1],$val[2],$val[3],$val[4],0,0,0,0)',    # conversion of raw value to visible value
-    },
-    "h40221" => {    # Power Factor h40221 (Len 5)   40221 to 40225
-        'len'     => '5',                       #M_AC_PF, M_AC_PF_A, M_AC_PF_B, M_AC_PF_C, M_AC_PF_SF,
-        'reading' => 'X_Meter_1_Block_AC_PF',
-        'unpack'  =>  'nnnns>', # 's>s>s>s>n!',   # 's>s>s>s>s>'
-        'expr' =>
-          'ExprMeter($hash,$name,"X_Meter_1_M_AC_PF",$val[0],$val[1],$val[2],$val[3],$val[4],0,0,0,0)',    # conversion of raw value to visible value
-    },
+   # "h40211" => {    #Apparent Power 40211 (Len 5) 40211 to 40215
+   #     'len'     => '5',                       #M_AC_VA, M_AC_VA_A, M_AC_VA_B, M_AC_VA_C, M_AC_VA_SF,
+   #     'reading' => 'X_Meter_1_Block_AC_VA',
+   #     'unpack'  => 'nnnns>', #'s>s>s>s>n!',   # 's>s>s>s>s>'
+   #     'expr' =>
+   #       'ExprMeter($hash,$name,"X_Meter_1_M_AC_VA",$val[0],$val[1],$val[2],$val[3],$val[4],0,0,0,0)',    # conversion of raw value to visible value
+   # },
+   # "h40216" => {    #Reactive Power 40216 (Len 5) 40215 to 40220
+   #     'len'     => '5',                        #M_AC_VAR, M_AC_VAR_A, M_AC_VAR_B, M_AC_VAR_C, M_AC_VAR_SF,
+   #     'reading' => 'X_Meter_1_Block_AC_VAR',
+   #     'unpack'  => 'nnnns>',  #'s>s>s>s>n!',  # 's>s>s>s>s>'
+   #     'expr' =>
+   #       'ExprMeter($hash,$name,"X_Meter_1_M_AC_VAR",$val[0],$val[1],$val[2],$val[3],$val[4],0,0,0,0)',    # conversion of raw value to visible value
+   # },
+   # "h40221" => {    # Power Factor h40221 (Len 5)   40221 to 40225
+   #     'len'     => '5',                       #M_AC_PF, M_AC_PF_A, M_AC_PF_B, M_AC_PF_C, M_AC_PF_SF,
+   #     'reading' => 'X_Meter_1_Block_AC_PF',
+   #     'unpack'  =>  'nnnns>', # 's>s>s>s>n!',   # 's>s>s>s>s>'
+   #     'expr' =>
+   #       'ExprMeter($hash,$name,"X_Meter_1_M_AC_PF",$val[0],$val[1],$val[2],$val[3],$val[4],0,0,0,0)',    # conversion of raw value to visible value
+   # },
 
     "h40226" => {    #Accumulated Energy Real Energy 40226 to 40242
         'len' => '17',    #M_Exported, M_Exported_A, M_Exported_B, M_Exported_C, M_Imported, M_Imported_A, M_Imported_B, M_Imported_C, M_Energy_W_SF
         'reading' => 'X_Meter_1_Block_Energy_W',
-        'unpack'  => 'NNNNNNNNs>',
+        'unpack'  => 'l>l>l>l>l>l>l>l>s>', #'NNNNNNNNs>',
         'expr'    => 'ExprMeter($hash,$name,"X_Meter_1_M_Energy_W",$val[0],$val[1],$val[2],$val[3],$val[4],$val[5],$val[6],$val[7],$val[8])'
         ,                 # conversion of raw value to visible value
     },
 
-    "h40243" => {         #Apparent Energy Real Energy 40243 to 40259
-        'len' => '17',    #M_Exported, M_Exported_A, M_Exported_B, M_Exported_C, M_Imported, M_Imported_A, M_Imported_B, M_Imported_C, M_Energy_W_SF
-        'reading' => 'X_Meter_1_Block_Energy_VA',
-        'unpack'  => 'NNNNNNNNs>',
-        'expr'    => 'ExprMeter($hash,$name,"X_Meter_1_M_Energy_VA",$val[0],$val[1],$val[2],$val[3],$val[4],$val[5],$val[6],$val[7],$val[8])'
-        ,                 # conversion of raw value to visible value
-    },
+   # "h40243" => {         #Apparent Energy Real Energy 40243 to 40259
+   #     'len' => '17',    #M_Exported, M_Exported_A, M_Exported_B, M_Exported_C, M_Imported, M_Imported_A, M_Imported_B, M_Imported_C, M_Energy_W_SF
+   #     'reading' => 'X_Meter_1_Block_Energy_VA',
+   #     'unpack'  => 'NNNNNNNNs>',
+   #     'expr'    => 'ExprMeter($hash,$name,"X_Meter_1_M_Energy_VA",$val[0],$val[1],$val[2],$val[3],$val[4],$val[5],$val[6],$val[7],$val[8])'
+   #     ,                 # conversion of raw value to visible value
+   # },
 );
 
 #####################################
@@ -743,7 +752,6 @@ sub ExprMeter()
             $hash->{MODEL_METER} = $vval[0];
             $hash->{MODEL} = $model." ".$vval[0];
             readingsBulkUpdate( $hash, $ReadingName, $vval[0] );
-            
         }        
         
     }
@@ -759,13 +767,17 @@ sub ExprMeter()
         readingsBulkUpdate( $hash, $ReadingName . "_C",  $vval[3] * 10**$vval[4] );
         readingsBulkUpdate( $hash, $ReadingName . "_SF", $vval[4] );
     }
-    elsif ( $ReadingName eq "X_Meter_1_M_AC_Voltage" )
+    elsif ( $ReadingName eq "X_Meter_1_M_AC_Voltage" )    #M_AC_Voltage_LN, M_AC_Voltage_AN, M_AC_Voltage_BN, M_AC_Voltage_CN, M_AC_Voltage_LL, M_AC_Voltage_AB, M_AC_Voltage_BC, M_AC_Voltage_CA, M_AC_Voltage_SF  
     {
-        readingsBulkUpdate( $hash, $ReadingName . "_LL", $vval[0] * 10**$vval[4] );
-        readingsBulkUpdate( $hash, $ReadingName . "_AB", $vval[1] * 10**$vval[4] );
-        readingsBulkUpdate( $hash, $ReadingName . "_BC", $vval[2] * 10**$vval[4] );
-        readingsBulkUpdate( $hash, $ReadingName . "_CA", $vval[3] * 10**$vval[4] );
-        readingsBulkUpdate( $hash, $ReadingName . "_SF", $vval[4] );
+        readingsBulkUpdate( $hash, $ReadingName . "_LN", $vval[0] * 10**$vval[8] );
+        readingsBulkUpdate( $hash, $ReadingName . "_AN", $vval[1] * 10**$vval[8] );
+        readingsBulkUpdate( $hash, $ReadingName . "_BN", $vval[2] * 10**$vval[8] );
+        readingsBulkUpdate( $hash, $ReadingName . "_CN", $vval[3] * 10**$vval[8] );
+        readingsBulkUpdate( $hash, $ReadingName . "_LL", $vval[4] * 10**$vval[8] );
+        readingsBulkUpdate( $hash, $ReadingName . "_AB", $vval[5] * 10**$vval[8] );
+        readingsBulkUpdate( $hash, $ReadingName . "_BC", $vval[6] * 10**$vval[8] );
+        readingsBulkUpdate( $hash, $ReadingName . "_CA", $vval[7] * 10**$vval[8] );
+        readingsBulkUpdate( $hash, $ReadingName . "_SF", $vval[8] );
     }
     elsif ( $ReadingName eq "X_Meter_1_M_Energy_W" )
     {
