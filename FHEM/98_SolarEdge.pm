@@ -1,5 +1,5 @@
 ##############################################
-# $Id: 98_SolarEdge.pm 0027 2020-14-10 17:54:00Z pejonp $
+# $Id: 98_SolarEdge.pm 0028 2020-15-10 17:54:00Z pejonp $
 #
 #	fhem Modul für Wechselrichter SolarEdge SE5K
 #	verwendet Modbus.pm als Basismodul für die eigentliche Implementation des Protokolls.
@@ -29,6 +29,7 @@
 # 2020-05-03  Undefined subroutine &SolarEdge::ExprMppt (PBP) :pejonp 
 # 2020-11-10  Anpassung X-Meter
 # 2020-13-10  Auslesen X_Meter_C_Model usw.  Fehlerbehebung
+# 2020-15-10  kleine Anpassungen
 
 
 
@@ -57,6 +58,8 @@ use GPUtils qw(GP_Import GP_Export);
 use Scalar::Util qw(looks_like_number);
 use feature qw/say switch/;
 use SetExtensions;
+use Math::Round qw/nearest/;
+
 
 use FHEM::Meta;
 main::LoadModule( 'Modbus');
@@ -515,7 +518,7 @@ my %SolarEdgeMeter1parseInfo = (
     "h40226" => {    #Accumulated Energy Real Energy 40226 to 40242
         'len' => '17',    #M_Exported, M_Exported_A, M_Exported_B, M_Exported_C, M_Imported, M_Imported_A, M_Imported_B, M_Imported_C, M_Energy_W_SF
         'reading' => 'X_Meter_1_Block_Energy_W',
-        'unpack'  => 'l>l>l>l>l>l>l>l>s>', #'NNNNNNNNs>',
+        'unpack'  => 'L>L>L>L>L>L>L>L>s>', # 'l>l>l>l>l>l>l>l>s>' , 'N>N>N>N>N>N>N>N>s>', 
         'expr'    => 'ExprMeter($hash,$name,"X_Meter_1_M_Energy_W",$val[0],$val[1],$val[2],$val[3],$val[4],$val[5],$val[6],$val[7],$val[8])'
         ,                 # conversion of raw value to visible value
     },
@@ -559,7 +562,6 @@ sub Initialize()
 
       return;
 }
-
 ###################################
 sub ExprMppt()
 {                                                     # Berechnung Wert mit ScaleFactor unter Beachtung Operating_State
@@ -594,6 +596,7 @@ sub ExprMppt()
         if ( $ReadingName eq "C_Model" )
     {
         Log3 $hash, 4, "SolarEdge $DevName Model : " . $vval[0] . ":" . $vval[1] . ":" . $vval[2] . ":" . $vval[3] . ":" . $vval[4];
+        $hash->{MODEL_WR} = $vval[0];
         $hash->{MODEL} = $vval[0];
         readingsBulkUpdate( $hash, $ReadingName, $vval[0] );
     }
@@ -686,6 +689,28 @@ sub ExprMppt()
         readingsBulkUpdate( $hash, "X_PV_Energy",        $vval[0] * 10**$vval[1]  );
         readingsBulkUpdate( $hash, $ReadingName . "_SF", $vval[1] );
 
+        ############## Tabelle in STATE aufbauen ################
+        my $a_power = ReadingsVal( $DevName, "I_AC_Power", 0 );
+        my $d_power = ReadingsVal( $DevName, "I_DC_Power", 0 );
+        my $s_dc_voltage = ReadingsVal( $DevName, "I_DC_Voltage", 0 );
+        my $s_ac_current = ReadingsVal( $DevName, "I_AC_Current", 0 );
+        my $s_ac_energy = ReadingsVal( $DevName, "I_AC_Energy_WH", 0 );
+        my $einheit_e = "Wh";
+        
+        if  ($s_ac_energy > 1000000)
+        {
+          $einheit_e = "MWh";
+          $s_ac_energy = nearest('0.01',$s_ac_energy / 1000000);   
+        } elsif ( $s_ac_energy > 1000) {
+          $einheit_e = "kWh";
+          $s_ac_energy = nearest('0.01',$s_ac_energy / 1000);
+        }
+        my $energie = $s_ac_energy." ".$einheit_e;
+		my $state ="<h1>Gesamtenergie ".$energie." </h1><table border frame=box><tr><th>Leistung DC</th><th>Leistung AC</th><th>Spannung DC</th><th>Strom AC</th></tr><tr><td>".$d_power." W</td><td>".$a_power." W</td><td>".$s_dc_voltage." V-</td><td>". $s_ac_current." A~</td></tr></table>";
+		readingsBulkUpdate($hash, "state", $state);
+       ###############################################
+       
+       
         # Ende  I_AC_Energy_WH(Today, Week,...
     }
     else
@@ -748,9 +773,10 @@ sub ExprMeter()
         Log3 $hash, 4, "SolarEdge $DevName X_Meter_1_C_Model : " . $vval[0] . ":" . $vval[1];
         
         if (length($vval[0]) > 1 ) {
-            my $model =  ReadingsVal( $DevName, "C_Model", -1 );
+            my $model_wr =  ReadingsVal( $DevName, "C_Model", 0 );
             $hash->{MODEL_METER} = $vval[0];
-            $hash->{MODEL} = $model." ".$vval[0];
+           # $hash->{MODEL_WR} = $model_wr;
+            $hash->{MODEL} = $model_wr." : ".$vval[0];                  # MODEL      SE7K-RWS48BNN4 : SE-MTR-3Y-400V-A
             readingsBulkUpdate( $hash, $ReadingName, $vval[0] );
         }        
         
