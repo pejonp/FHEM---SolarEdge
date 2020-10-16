@@ -22,3 +22,7 @@ So I have the chance to see if new devices must be supported.
 		attr global sendStatistics onUpdate
 
 must set.
+
+you may need to install the Math::Round module
+
+ sudo apt install libmath-round-perl
