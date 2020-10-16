@@ -1,5 +1,5 @@
 ##############################################
-# $Id: 98_SolarEdge.pm 0028 2020-15-10 17:54:00Z pejonp $
+# $Id: 98_SolarEdge.pm 0030 2020-16-10 17:54:00Z pejonp $
 #
 #	fhem Modul für Wechselrichter SolarEdge SE5K
 #	verwendet Modbus.pm als Basismodul für die eigentliche Implementation des Protokolls.
@@ -120,7 +120,7 @@ my $SolarEdge_Version = '0023 - 08.03.2020';
 
 my %SolarEdgedeviceInfo = (
     "h" => {
-        'combine' => '30',
+        'combine' => '40',
         'defPoll' => '1',
     },
     "type-VT_String" => {
@@ -488,7 +488,7 @@ my %SolarEdgeMeter1parseInfo = (
     "h40206" => {                                                                                          #Real Power 40206 (Len 5) 40206 to 40210
         'len'     => '5',                          #M_AC_Power, M_AC_Power_A, M_AC_Power_B, M_AC_Power_C, M_AC_Power_SF,
         'reading' => 'X_Meter_1_Block_AC_Power',
-        'unpack'  => 'nnnns>', #'s>s>s>s>n!',  # 's>s>s>s>s>'
+        'unpack'  => 's>s>s>s>n!', # 'nnnns>', #'s>s>s>s>n!',  # 's>s>s>s>s>' 
         'expr' =>
           'ExprMeter($hash,$name,"X_Meter_1_M_AC_Power",$val[0],$val[1],$val[2],$val[3],$val[4],0,0,0,0)',  # conversion of raw value to visible value
     },
@@ -689,7 +689,20 @@ sub ExprMppt()
         readingsBulkUpdate( $hash, "X_PV_Energy",        $vval[0] * 10**$vval[1]  );
         readingsBulkUpdate( $hash, $ReadingName . "_SF", $vval[1] );
 
-        ############## Tabelle in STATE aufbauen ################
+       
+       
+       
+        # Ende  I_AC_Energy_WH(Today, Week,...
+    }
+    else
+    {
+        readingsBulkUpdate( $hash, $ReadingName,         $vval[0] * 10**$vval[1] );
+        readingsBulkUpdate( $hash, $ReadingName . "_SF", $vval[1] );
+    }
+
+     ############## Tabelle in STATE aufbauen ################
+        my $wr_status = ReadingsVal( $DevName, "I_Status", 0 );
+        my $temp = ReadingsVal( $DevName, "I_Temp_HeatSink", 0 );
         my $a_power = ReadingsVal( $DevName, "I_AC_Power", 0 );
         my $d_power = ReadingsVal( $DevName, "I_DC_Power", 0 );
         my $s_dc_voltage = ReadingsVal( $DevName, "I_DC_Voltage", 0 );
@@ -706,18 +719,15 @@ sub ExprMppt()
           $s_ac_energy = nearest('0.01',$s_ac_energy / 1000);
         }
         my $energie = $s_ac_energy." ".$einheit_e;
-		my $state ="<h1>Gesamtenergie ".$energie." </h1><table border frame=box><tr><th>Leistung DC</th><th>Leistung AC</th><th>Spannung DC</th><th>Strom AC</th></tr><tr><td>".$d_power." W</td><td>".$a_power." W</td><td>".$s_dc_voltage." V-</td><td>". $s_ac_current." A~</td></tr></table>";
+        my $s_teil_1 = "<table border=0 bordercolor='green' cellspacing=0 align='center'><tr><th><h1>Gesamtenergie ".$energie." </h1> </td></tr></table>";
+        my $s_teil_2 = "<table border=4 bordercolor='green' cellspacing=5 align='center'><tr><th>Status</th><th>Temperatur</th><tr><td>".$wr_status."</td><td>".$temp."</td></tr>";
+        my $s_teil_3 = "<tr><th>Leistung DC</th><th>Leistung AC</th><th>Spannung DC</th><th>Strom AC</th></tr><tr><td>".$d_power." W</td><td>".$a_power." W</td><td>".$s_dc_voltage." V-</td><td>". $s_ac_current." A~</td></tr></table>";
+	#	my $state ="<h1>Gesamtenergie ".$energie." </h1><table border=4 bordercolor='green' cellspacing=5 frame=box><tr><th>Leistung DC</th><th>Leistung AC</th><th>Spannung DC</th><th>Strom AC</th></tr><tr><td>".$d_power." W</td><td>".$a_power." W</td><td>".$s_dc_voltage." V-</td><td>". $s_ac_current." A~</td></tr></table>";
+    #   my $state = "<h1>Gesamtenergie ".$energie." </h1><table border=1 bordercolor='green' cellspacing=1><tr><th>Status: ".$wr_status." </th><th>Temperatur: ".$temp." </th></tr><table><tr><th></th></tr><table border=4 bordercolor='green' cellspacing=5 frame=box><tr><th>Leistung DC</th><th>Leistung AC</th><th>Spannung DC</th><th>Strom AC</th></tr><tr><td>".$d_power." W</td><td>".$a_power." W</td><td>".$s_dc_voltage." V-</td><td>". $s_ac_current." A~</td></tr></table>";
+        my $state = $s_teil_1.$s_teil_2.$s_teil_3 ;
 		readingsBulkUpdate($hash, "state", $state);
        ###############################################
-       
-       
-        # Ende  I_AC_Energy_WH(Today, Week,...
-    }
-    else
-    {
-        readingsBulkUpdate( $hash, $ReadingName,         $vval[0] * 10**$vval[1] );
-        readingsBulkUpdate( $hash, $ReadingName . "_SF", $vval[1] );
-    }
+
 
     #if ( $ReadingName eq "I_AC_Power" )
     #{
@@ -1008,6 +1018,10 @@ sub HelperConsumption()
     SolarEdge uses the low level Modbus module to provide a way to communicate with SolarEdge inverter.
 	It defines the modbus input and holding registers and reads them in a defined interval.
   Modbusversion => Modbus 4.1.5 - 17.9.2019
+
+  you may need to install the Math::Round module
+  
+  sudo apt install libmath-round-perl
 
 	<br>
     <b>Prerequisites</b>
