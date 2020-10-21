@@ -1,5 +1,5 @@
 ##############################################
-# $Id: 98_SolarEdge.pm 0030 2020-16-10 17:54:00Z pejonp $
+# $Id: 98_SolarEdge.pm 0031 2020-21-10 17:54:00Z pejonp $
 #
 #	fhem Modul für Wechselrichter SolarEdge SE5K
 #	verwendet Modbus.pm als Basismodul für die eigentliche Implementation des Protokolls.
@@ -30,6 +30,7 @@
 # 2020-11-10  Anpassung X-Meter
 # 2020-13-10  Auslesen X_Meter_C_Model usw.  Fehlerbehebung
 # 2020-15-10  kleine Anpassungen
+# 2020-21-10  ModBus-Register für Batterie eingetragen
 
 
 
@@ -531,13 +532,65 @@ my %SolarEdgeMeter1parseInfo = (
    #     ,                 # conversion of raw value to visible value
    # },
 );
+#####################################
+my %SolarEdgeBat1parseInfo = (
+###############################################################################################################
+    # Holding Register
+###############################################################################################################
+    "h57600" => {    # E100(F500) 16R Battery 1 Manufacturer Name String[32]
+        'reading' => 'Battery_1_Manufacturer_Name',
+        'type'    => 'VT_String',
+    },
+    "h57616" => {    # E110(F510) 16R Battery 1 Model String[32]
+        'reading' => 'Battery_1_Model',
+        'type'    => 'VT_String',
+    },
+    "h57632" => {     # E120(F520) 16R Battery 1 Firmware Version String[32]
+        'reading' => 'Battery_1_Firmware',
+        'type'    => 'VT_String',
+    },
+    "h57648" => {     # E130(F530) 16R Battery 1 SerialNumber String[32]
+        'reading' => 'Battery_1_SerialNumber',
+        'type'    => 'VT_String',
+    },
+    "h57664" => {    # E140(F540) 1R Battery 1 DeviceID Uint16
+        'len'     => '1',                                                           
+        'reading' => 'Battery_1_DeviceID',
+       # 'unpack'  => 'n',
+    },
+    "h57712" => {     # E170(F570) 2R Battery 1 Instantaneous Voltage Float32 V
+        'len'     => '2',  
+        'reading' => 'Battery_1_Instantaneous_Voltage',
+        'unpack'  => 'dd',
+    },
+    "h57714" => {     # E172(F572) 2R Battery 1 Instantaneous Current Float32 A
+        'len'     => '2',  
+        'reading' => 'Battery_1_Instantaneous_Current',
+        'unpack'  => 'dd',
+    },
+    "h57716" => {     # E174(F574) 2R Battery 1 Instantaneous Power Float32  W
+        'len'     => '2',  
+        'reading' => 'Battery_1_Instantaneous_Power',
+        'unpack'  => 'dd',
+    },
+    "h57734" => {     # E186(F586) 2R Battery 1 Status Uint32 0-7
+        'len'     => '2',  
+        'reading' => 'Battery_1_Status',
+        'expr'    => '$val',
+        'map'     => '1:Aus, 3:Laden, 4:Entladen, 6:Erhaltungsladen',   # 1: Aus 3: Laden 4: Entladen 6: Erhaltungsladen
+        'setexpr' => '$val',
+    },
+);
+#####################################
+
+
 
 #####################################
 sub Initialize()
 {
     my $hash = shift;
 
-    my %SolarEdgeparseInfoAll = ( %SolarEdgeparseInfo, %SolarEdgeMeter1parseInfo );
+    my %SolarEdgeparseInfoAll = ( %SolarEdgeparseInfo, %SolarEdgeMeter1parseInfo, %SolarEdgeBat1parseInfo );
 
     #require "$attr{global}{modpath}/FHEM/98_Modbus.pm";
     #require "$attr{global}{modpath}/FHEM/DevIo.pm";
