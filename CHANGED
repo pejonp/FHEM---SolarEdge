@@ -6,3 +6,15 @@ Readings: pv_energy pv_energytoday pv_energytoweek pv_energytomont ...
 'poll' => 'once', für statische Werte => C_SunSpec_ID,C_Manufacturer,C_Version,C_SerialNumber,C_DeviceAddress,C_SunSpec_DID
 08.03.2020
 Anpassungen von CaptainRoot übernommen (Meter_1 mit aufgenommen)
+2020-04-20  
+PBP  
+2020-05-03  
+Undefined subroutine &SolarEdge::ExprMppt (PBP)  
+2020-11-10  
+Anpassung X-Meter
+2020-13-10  
+Auslesen X_Meter_C_Model usw.  Fehlerbehebung
+2020-15-10  
+kleine Anpassungen
+2020-21-10  
+ModBus-Register für Batterie eingetragen
