@@ -1,5 +1,5 @@
 ##############################################
-# $Id: 98_SolarEdge.pm 0032 2020-22-10 17:54:00Z pejonp $
+# $Id: 98_SolarEdge.pm 0033 2020-22-10 17:54:00Z pejonp $
 #
 #	fhem Modul für Wechselrichter SolarEdge SE5K
 #	verwendet Modbus.pm als Basismodul für die eigentliche Implementation des Protokolls.
@@ -31,7 +31,8 @@
 # 2020-13-10  Auslesen X_Meter_C_Model usw.  Fehlerbehebung
 # 2020-15-10  kleine Anpassungen
 # 2020-21-10  ModBus-Register für Batterie eingetragen
-
+# 2020-22-10  Bat Register hinzugefügt
+# 2020-22-10  Apparent Power, Reactive Power, Power Factor, Reg Apparent Energy wieder mit aufgenommen
 
 
 use strict;
@@ -494,43 +495,43 @@ my %SolarEdgeMeter1parseInfo = (
           'ExprMeter($hash,$name,"X_Meter_1_M_AC_Power",$val[0],$val[1],$val[2],$val[3],$val[4],0,0,0,0)',  # conversion of raw value to visible value
     },
 
-   # "h40211" => {    #Apparent Power 40211 (Len 5) 40211 to 40215
-   #     'len'     => '5',                       #M_AC_VA, M_AC_VA_A, M_AC_VA_B, M_AC_VA_C, M_AC_VA_SF,
-   #     'reading' => 'X_Meter_1_Block_AC_VA',
-   #     'unpack'  => 'nnnns>', #'s>s>s>s>n!',   # 's>s>s>s>s>'
-   #     'expr' =>
-   #       'ExprMeter($hash,$name,"X_Meter_1_M_AC_VA",$val[0],$val[1],$val[2],$val[3],$val[4],0,0,0,0)',    # conversion of raw value to visible value
-   # },
-   # "h40216" => {    #Reactive Power 40216 (Len 5) 40215 to 40220
-   #     'len'     => '5',                        #M_AC_VAR, M_AC_VAR_A, M_AC_VAR_B, M_AC_VAR_C, M_AC_VAR_SF,
-   #     'reading' => 'X_Meter_1_Block_AC_VAR',
-   #     'unpack'  => 'nnnns>',  #'s>s>s>s>n!',  # 's>s>s>s>s>'
-   #     'expr' =>
-   #       'ExprMeter($hash,$name,"X_Meter_1_M_AC_VAR",$val[0],$val[1],$val[2],$val[3],$val[4],0,0,0,0)',    # conversion of raw value to visible value
-   # },
-   # "h40221" => {    # Power Factor h40221 (Len 5)   40221 to 40225
-   #     'len'     => '5',                       #M_AC_PF, M_AC_PF_A, M_AC_PF_B, M_AC_PF_C, M_AC_PF_SF,
-   #     'reading' => 'X_Meter_1_Block_AC_PF',
-   #     'unpack'  =>  'nnnns>', # 's>s>s>s>n!',   # 's>s>s>s>s>'
-   #     'expr' =>
-   #       'ExprMeter($hash,$name,"X_Meter_1_M_AC_PF",$val[0],$val[1],$val[2],$val[3],$val[4],0,0,0,0)',    # conversion of raw value to visible value
-   # },
+    "h40211" => {    #Apparent Power 40211 (Len 5) 40211 to 40215
+        'len'     => '5',                       #M_AC_VA, M_AC_VA_A, M_AC_VA_B, M_AC_VA_C, M_AC_VA_SF,
+        'reading' => 'X_Meter_1_Block_AC_VA',
+        'unpack'  => 's>s>s>s>n!',
+        'expr' =>
+          'ExprMeter($hash,$name,"X_Meter_1_M_AC_VA",$val[0],$val[1],$val[2],$val[3],$val[4],0,0,0,0)',    # conversion of raw value to visible value
+    },
+    "h40216" => {    #Reactive Power 40216 (Len 5) 40215 to 40220
+        'len'     => '5',                        #M_AC_VAR, M_AC_VAR_A, M_AC_VAR_B, M_AC_VAR_C, M_AC_VAR_SF,
+        'reading' => 'X_Meter_1_Block_AC_VAR',
+        'unpack'  => 's>s>s>s>n!',
+        'expr' =>
+          'ExprMeter($hash,$name,"X_Meter_1_M_AC_VAR",$val[0],$val[1],$val[2],$val[3],$val[4],0,0,0,0)',    # conversion of raw value to visible value
+    },
+    "h40221" => {    # Power Factor h40221 (Len 5)   40221 to 40225
+        'len'     => '5',                       #M_AC_PF, M_AC_PF_A, M_AC_PF_B, M_AC_PF_C, M_AC_PF_SF,
+        'reading' => 'X_Meter_1_Block_AC_PF',
+        'unpack'  =>  's>s>s>s>n!', 
+        'expr' =>
+          'ExprMeter($hash,$name,"X_Meter_1_M_AC_PF",$val[0],$val[1],$val[2],$val[3],$val[4],0,0,0,0)',    # conversion of raw value to visible value
+    },
 
     "h40226" => {    #Accumulated Energy Real Energy 40226 to 40242
         'len' => '17',    #M_Exported, M_Exported_A, M_Exported_B, M_Exported_C, M_Imported, M_Imported_A, M_Imported_B, M_Imported_C, M_Energy_W_SF
         'reading' => 'X_Meter_1_Block_Energy_W',
         'unpack'  => 'L>L>L>L>L>L>L>L>s>', # 'l>l>l>l>l>l>l>l>s>' , 'N>N>N>N>N>N>N>N>s>', 
         'expr'    => 'ExprMeter($hash,$name,"X_Meter_1_M_Energy_W",$val[0],$val[1],$val[2],$val[3],$val[4],$val[5],$val[6],$val[7],$val[8])'
-        ,                 # conversion of raw value to visible value
+        ,                
     },
 
-   # "h40243" => {         #Apparent Energy Real Energy 40243 to 40259
-   #     'len' => '17',    #M_Exported, M_Exported_A, M_Exported_B, M_Exported_C, M_Imported, M_Imported_A, M_Imported_B, M_Imported_C, M_Energy_W_SF
-   #     'reading' => 'X_Meter_1_Block_Energy_VA',
-   #     'unpack'  => 'NNNNNNNNs>',
-   #     'expr'    => 'ExprMeter($hash,$name,"X_Meter_1_M_Energy_VA",$val[0],$val[1],$val[2],$val[3],$val[4],$val[5],$val[6],$val[7],$val[8])'
-   #     ,                 # conversion of raw value to visible value
-   # },
+   "h40243" => {         #Apparent Energy Real Energy 40243 to 40259
+       'len' => '17',    #M_Exported, M_Exported_A, M_Exported_B, M_Exported_C, M_Imported, M_Imported_A, M_Imported_B, M_Imported_C, M_Energy_W_SF
+       'reading' => 'X_Meter_1_Block_Energy_VA',
+       'unpack'  => 'L>L>L>L>L>L>L>L>s>',
+       'expr'    => 'ExprMeter($hash,$name,"X_Meter_1_M_Energy_VA",$val[0],$val[1],$val[2],$val[3],$val[4],$val[5],$val[6],$val[7],$val[8])'
+        ,                
+    },
 );
 #####################################
 my %SolarEdgeBat1parseInfo = (
@@ -556,7 +557,7 @@ my %SolarEdgeBat1parseInfo = (
     "h57664" => {    # E140(F540) 1R Battery 1 DeviceID Uint16
         'len'     => '1',                                                           
         'reading' => 'Battery_1_DeviceID',
-       # 'unpack'  => 'n',
+         'type'    => 'VT_String',
     },
     "h57666" => {    # E142 (F542) 2R Battery 1 Rated Energy Float32 W*H
         'len'     => '2',                                                           
