@@ -1,5 +1,5 @@
 ##############################################
-# $Id: 98_SolarEdge.pm 0031 2020-21-10 17:54:00Z pejonp $
+# $Id: 98_SolarEdge.pm 0032 2020-22-10 17:54:00Z pejonp $
 #
 #	fhem Modul für Wechselrichter SolarEdge SE5K
 #	verwendet Modbus.pm als Basismodul für die eigentliche Implementation des Protokolls.
@@ -558,20 +558,45 @@ my %SolarEdgeBat1parseInfo = (
         'reading' => 'Battery_1_DeviceID',
        # 'unpack'  => 'n',
     },
+    "h57666" => {    # E142 (F542) 2R Battery 1 Rated Energy Float32 W*H
+        'len'     => '2',                                                           
+        'reading' => 'Battery_1_Rated_Energy_WH',
+        'unpack'  => 'D>',
+    },
+    "h57668" => {    # E144 (F544) 2R Battery 1 Max Charge Continues Power Float32 W
+        'len'     => '2',                                                           
+        'reading' => 'Battery_1_Max_Charge_Continues_Power_W',
+        'unpack'  => 'N>',
+    },
+    "h57670" => {    # E146 (F546) 2R Battery 1 Max Discharge Continues Power Float32 W
+        'len'     => '2',                                                           
+        'reading' => 'Battery_1_Max_Discharge_Continues_Power_W',
+        'unpack'  => 'NN',
+    },
+    "h57672" => {    # E148 (F548) 2R Battery 1 Max Charge Peak Power Float32 W
+        'len'     => '2',                                                           
+        'reading' => 'Battery_1_Max_Charge_Peak_Power_W',
+        'unpack'  => 'DD',
+    },
+    "h57674" => {    # E14A (F54A) 2R Battery 1 Max Discharge Peak Power Float32 W
+        'len'     => '2',                                                           
+        'reading' => 'Battery_1_Max_Discharge_Peak_Power_W',
+        'unpack'  => 'I2',
+    },
     "h57712" => {     # E170(F570) 2R Battery 1 Instantaneous Voltage Float32 V
         'len'     => '2',  
-        'reading' => 'Battery_1_Instantaneous_Voltage',
-        'unpack'  => 'dd',
+        'reading' => 'Battery_1_Instantaneous_Voltage_V',
+        'unpack'  => 'd2',
     },
     "h57714" => {     # E172(F572) 2R Battery 1 Instantaneous Current Float32 A
         'len'     => '2',  
-        'reading' => 'Battery_1_Instantaneous_Current',
+        'reading' => 'Battery_1_Instantaneous_Current_A',
         'unpack'  => 'dd',
     },
     "h57716" => {     # E174(F574) 2R Battery 1 Instantaneous Power Float32  W
         'len'     => '2',  
-        'reading' => 'Battery_1_Instantaneous_Power',
-        'unpack'  => 'dd',
+        'reading' => 'Battery_1_Instantaneous_Power_W',
+        'unpack'  => 'NN',
     },
     "h57734" => {     # E186(F586) 2R Battery 1 Status Uint32 0-7
         'len'     => '2',  
