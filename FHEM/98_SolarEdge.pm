@@ -50,8 +50,6 @@ sub ExprMeter {
     return SolarEdge_ExprMeter( $hash, $DevName, $ReadingName, $vval_0 , $vval_1 , $vval_2 , $vval_3 , $vval_4, $vval_5 , $vval_6 , $vval_7 , $vval_8 );
 }
 
-
-#package Modbus;
 package FHEM::SolarEdge;
 
 
@@ -68,7 +66,7 @@ use Math::Round qw/nearest/;
 
 use FHEM::Meta;
 main::LoadModule( 'Modbus');
-#main::LoadModule( 'ModbusAttr');
+main::LoadModule( 'ModbusAttr');
 
 
 
@@ -105,7 +103,7 @@ BEGIN {
           TimeNow
           Dispatch
           Initialize
-        #  ModbusLD_Initialize
+          ModbusLD_Initialize
           InitializeLD
           ReadingsTimestamp
            )
@@ -629,8 +627,8 @@ sub Initialize()
     #$hash->{AttrFn}     = \&Attr;
     $hash->{parseInfo}  = \%SolarEdgeparseInfoAll;    # defines registers for this Modbus Defive
     $hash->{deviceInfo} = \%SolarEdgedeviceInfo;      # defines properties of the device like
-    #ModbusLD_Initialize($hash);        # Generic function of the Modbus module does the rest
-    Modbus::InitializeLD($hash);                      # Generic function of the Modbus module does the rest
+    ModbusLD_Initialize($hash);        # Generic function of the Modbus module does the rest
+    #Modbus::InitializeLD($hash);                      # Generic function of the Modbus module does the rest
 
     $hash->{AttrList} =
         $hash->{AttrList}
