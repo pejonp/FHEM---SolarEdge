@@ -1,5 +1,5 @@
 ##############################################
-# $Id: 98_SolarEdge.pm 0035 2020-24-10 17:54:00Z pejonp $
+# $Id: 98_SolarEdge.pm 0036 2020-24-10 17:54:00Z pejonp $
 #
 #	fhem Modul für Wechselrichter SolarEdge SE5K
 #	verwendet Modbus.pm als Basismodul für die eigentliche Implementation des Protokolls.
@@ -523,7 +523,7 @@ my %SolarEdgeMeter1parseInfo = (
     "h40226" => {    #Accumulated Energy Real Energy 40226 to 40242
         'len' => '17',    #M_Exported, M_Exported_A, M_Exported_B, M_Exported_C, M_Imported, M_Imported_A, M_Imported_B, M_Imported_C, M_Energy_W_SF
         'reading' => 'X_Meter_1_Block_Energy_W',
-        'unpack'  => 'L>L>L>L>L>L>L>L>s>', # 'l>l>l>l>l>l>l>l>s>' , 'N>N>N>N>N>N>N>N>s>', 
+        'unpack'  => 'L>L>L>L>L>L>L>L>s>', # 'l>l>l>l>l>l>l>l>s>'  
         'expr'    => 'ExprMeter($hash,$name,"X_Meter_1_M_Energy_W",$val[0],$val[1],$val[2],$val[3],$val[4],$val[5],$val[6],$val[7],$val[8])'
         ,                
     },
@@ -565,12 +565,12 @@ my %SolarEdgeBat1parseInfo = (
     "h57666" => {    # E142 (F542) 2R Battery 1 Rated Energy Float32 W*H
         'len'     => '2',                                                           
         'reading' => 'Battery_1_Rated_Energy_WH',
-        'unpack'  => 'N>',  # 'D>'
+        'unpack'  => 'NN',  # 'D>'
     },
     "h57668" => {    # E144 (F544) 2R Battery 1 Max Charge Continues Power Float32 W
         'len'     => '2',                                                           
         'reading' => 'Battery_1_Max_Charge_Continues_Power_W',
-        'unpack'  => 'N>',
+        'unpack'  => 'NN',
     },
     "h57670" => {    # E146 (F546) 2R Battery 1 Max Discharge Continues Power Float32 W
         'len'     => '2',                                                           
