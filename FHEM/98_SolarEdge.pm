@@ -1,5 +1,5 @@
 ##############################################
-# $Id: 98_SolarEdge.pm 0036 2020-24-10 17:54:00Z pejonp $
+# $Id: 98_SolarEdge.pm 0037 2020-24-10 17:54:00Z pejonp $
 #
 #	fhem Modul für Wechselrichter SolarEdge SE5K
 #	verwendet Modbus.pm als Basismodul für die eigentliche Implementation des Protokolls.
@@ -68,7 +68,7 @@ use Math::Round qw/nearest/;
 
 use FHEM::Meta;
 main::LoadModule( 'Modbus');
-main::LoadModule( 'ModbusAttr');
+#main::LoadModule( 'ModbusAttr');
 
 
 
@@ -105,7 +105,8 @@ BEGIN {
           TimeNow
           Dispatch
           Initialize
-          ModbusLD_Initialize
+        #  ModbusLD_Initialize
+          InitializeLD
           ReadingsTimestamp
            )
     );
@@ -560,47 +561,46 @@ my %SolarEdgeBat1parseInfo = (
     "h57664" => {    # E140(F540) 1R Battery 1 DeviceID Uint16
         'len'     => '1',                                                           
         'reading' => 'Battery_1_DeviceID',
-         'type'    => 'VT_String',
     },
     "h57666" => {    # E142 (F542) 2R Battery 1 Rated Energy Float32 W*H
         'len'     => '2',                                                           
         'reading' => 'Battery_1_Rated_Energy_WH',
-        'unpack'  => 'NN',  # 'D>'
+        'unpack'  => 'L>',  # 'NN' , 'D>'
     },
     "h57668" => {    # E144 (F544) 2R Battery 1 Max Charge Continues Power Float32 W
         'len'     => '2',                                                           
         'reading' => 'Battery_1_Max_Charge_Continues_Power_W',
-        'unpack'  => 'NN',
+        'unpack'  => 'L>',
     },
     "h57670" => {    # E146 (F546) 2R Battery 1 Max Discharge Continues Power Float32 W
         'len'     => '2',                                                           
         'reading' => 'Battery_1_Max_Discharge_Continues_Power_W',
-        'unpack'  => 'NN',
+        'unpack'  => 'L>',
     },
     "h57672" => {    # E148 (F548) 2R Battery 1 Max Charge Peak Power Float32 W
         'len'     => '2',                                                           
         'reading' => 'Battery_1_Max_Charge_Peak_Power_W',
-        'unpack'  => 'nn',  # 'DD'
+        'unpack'  => 'L>',  # 'DD'
     },
     "h57674" => {    # E14A (F54A) 2R Battery 1 Max Discharge Peak Power Float32 W
         'len'     => '2',                                                           
         'reading' => 'Battery_1_Max_Discharge_Peak_Power_W',
-        'unpack'  => 'NN',   #'I2 '
+        'unpack'  => 'L>',   #'I2 '
     },
     "h57712" => {     # E170(F570) 2R Battery 1 Instantaneous Voltage Float32 V
         'len'     => '2',  
         'reading' => 'Battery_1_Instantaneous_Voltage_V',
-        'unpack'  => 'nn',  #'d2'
+        'unpack'  => 'L>',  #'d2'
     },
     "h57714" => {     # E172(F572) 2R Battery 1 Instantaneous Current Float32 A
         'len'     => '2',  
         'reading' => 'Battery_1_Instantaneous_Current_A',
-        'unpack'  => 'nn',  #'dd'
+        'unpack'  => 'L>',  #'dd'
     },
     "h57716" => {     # E174(F574) 2R Battery 1 Instantaneous Power Float32  W
         'len'     => '2',  
         'reading' => 'Battery_1_Instantaneous_Power_W',
-        'unpack'  => 'NN',
+        'unpack'  => 'L>',
     },
     "h57734" => {     # E186(F586) 2R Battery 1 Status Uint32 0-7
         'len'     => '2',  
@@ -625,11 +625,12 @@ sub Initialize()
     #require "$attr{global}{modpath}/FHEM/DevIo.pm";
    
     
-    $hash->{DefFn} = \&Define;
-    $hash->{AttrFn}     = \&Attr;
+    #$hash->{DefFn} = \&Define;
+    #$hash->{AttrFn}     = \&Attr;
     $hash->{parseInfo}  = \%SolarEdgeparseInfoAll;    # defines registers for this Modbus Defive
     $hash->{deviceInfo} = \%SolarEdgedeviceInfo;      # defines properties of the device like
-    ModbusLD_Initialize($hash);        # Generic function of the Modbus module does the rest
+    #ModbusLD_Initialize($hash);        # Generic function of the Modbus module does the rest
+    Modbus::InitializeLD($hash);                      # Generic function of the Modbus module does the rest
 
     $hash->{AttrList} =
         $hash->{AttrList}
