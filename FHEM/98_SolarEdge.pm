@@ -1,5 +1,5 @@
 ##############################################
-# $Id: 98_SolarEdge.pm 0033 2020-22-10 17:54:00Z pejonp $
+# $Id: 98_SolarEdge.pm 0035 2020-24-10 17:54:00Z pejonp $
 #
 #	fhem Modul für Wechselrichter SolarEdge SE5K
 #	verwendet Modbus.pm als Basismodul für die eigentliche Implementation des Protokolls.
@@ -33,6 +33,8 @@
 # 2020-21-10  ModBus-Register für Batterie eingetragen
 # 2020-22-10  Bat Register hinzugefügt
 # 2020-22-10  Apparent Power, Reactive Power, Power Factor, Reg Apparent Energy wieder mit aufgenommen
+# 2020-24-10  unpack angepasst
+
 
 
 use strict;
@@ -49,7 +51,9 @@ sub ExprMeter {
 }
 
 
+#package Modbus;
 package FHEM::SolarEdge;
+
 
 no if $] >= 5.017011, warnings => 'experimental::smartmatch';
 #no warnings 'portable';    # Support for 64-bit ints required
@@ -61,7 +65,6 @@ use Scalar::Util qw(looks_like_number);
 use feature qw/say switch/;
 use SetExtensions;
 use Math::Round qw/nearest/;
-
 
 use FHEM::Meta;
 main::LoadModule( 'Modbus');
@@ -562,7 +565,7 @@ my %SolarEdgeBat1parseInfo = (
     "h57666" => {    # E142 (F542) 2R Battery 1 Rated Energy Float32 W*H
         'len'     => '2',                                                           
         'reading' => 'Battery_1_Rated_Energy_WH',
-        'unpack'  => 'D>',
+        'unpack'  => 'N>',  # 'D>'
     },
     "h57668" => {    # E144 (F544) 2R Battery 1 Max Charge Continues Power Float32 W
         'len'     => '2',                                                           
@@ -577,22 +580,22 @@ my %SolarEdgeBat1parseInfo = (
     "h57672" => {    # E148 (F548) 2R Battery 1 Max Charge Peak Power Float32 W
         'len'     => '2',                                                           
         'reading' => 'Battery_1_Max_Charge_Peak_Power_W',
-        'unpack'  => 'DD',
+        'unpack'  => 'nn',  # 'DD'
     },
     "h57674" => {    # E14A (F54A) 2R Battery 1 Max Discharge Peak Power Float32 W
         'len'     => '2',                                                           
         'reading' => 'Battery_1_Max_Discharge_Peak_Power_W',
-        'unpack'  => 'I2',
+        'unpack'  => 'NN',   #'I2 '
     },
     "h57712" => {     # E170(F570) 2R Battery 1 Instantaneous Voltage Float32 V
         'len'     => '2',  
         'reading' => 'Battery_1_Instantaneous_Voltage_V',
-        'unpack'  => 'd2',
+        'unpack'  => 'nn',  #'d2'
     },
     "h57714" => {     # E172(F572) 2R Battery 1 Instantaneous Current Float32 A
         'len'     => '2',  
         'reading' => 'Battery_1_Instantaneous_Current_A',
-        'unpack'  => 'dd',
+        'unpack'  => 'nn',  #'dd'
     },
     "h57716" => {     # E174(F574) 2R Battery 1 Instantaneous Power Float32  W
         'len'     => '2',  
@@ -861,7 +864,7 @@ sub ExprMeter()
     {
         Log3 $hash, 4, "SolarEdge $DevName X_Meter_1_C_Model : " . $vval[0] . ":" . $vval[1];
         
-        if (length($vval[0]) > 1 ) {
+        if (length($vval[0]) > 4 ) {
             my $model_wr =  ReadingsVal( $DevName, "C_Model", 0 );
             $hash->{MODEL_METER} = $vval[0];
            # $hash->{MODEL_WR} = $model_wr;
