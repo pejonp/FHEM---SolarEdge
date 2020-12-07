@@ -23,3 +23,7 @@ zusätzlich ModBus-Register für Batterie
 Apparent Power, Reactive Power, Power Factor, Reg Apparent Energy wieder mit aufgenommen
 2020-22-10
 unpack angepasst
+2020-20-11
+unpack Batterie repariert, Tabelle angepasst (mobile Ansicht verbessert) - beejayf
+2020-07-12
+I_AC_Voltage angepasst, 2_Meter eingefuegt  
