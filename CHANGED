@@ -1,29 +1,31 @@
-29.11.2018
-MODEL = SolarEdge C_Model
-4.11.2018
-Readings: pv_energy pv_energytoday pv_energytoweek pv_energytomont ...
-03.02.2019
-'poll' => 'once', für statische Werte => C_SunSpec_ID,C_Manufacturer,C_Version,C_SerialNumber,C_DeviceAddress,C_SunSpec_DID
-08.03.2020
-Anpassungen von CaptainRoot übernommen (Meter_1 mit aufgenommen)
-2020-04-20  
-PBP  
-2020-05-03  
-Undefined subroutine &SolarEdge::ExprMppt (PBP)  
-2020-11-10  
-Anpassung X-Meter
-2020-13-10  
-Auslesen X_Meter_C_Model usw.  Fehlerbehebung
-2020-15-10  
-kleine Anpassungen
-2020-21-10  
-ModBus-Register für Batterie eingetragen
+7.12.2020
+Register SOH & SOE  Batterie
+2020-07-12
+I_AC_Voltage angepasst, 2_Meter eingefuegt  
+2020-20-11
+unpack Batterie repariert, Tabelle angepasst (mobile Ansicht verbessert) - beejayf
+2020-22-10
+unpack angepasst
 2020-22-10  
 zusätzlich ModBus-Register für Batterie
 Apparent Power, Reactive Power, Power Factor, Reg Apparent Energy wieder mit aufgenommen
-2020-22-10
-unpack angepasst
-2020-20-11
-unpack Batterie repariert, Tabelle angepasst (mobile Ansicht verbessert) - beejayf
-2020-07-12
-I_AC_Voltage angepasst, 2_Meter eingefuegt  
+2020-21-10  
+ModBus-Register für Batterie eingetragen
+2020-15-10  
+kleine Anpassungen
+2020-13-10  
+Auslesen X_Meter_C_Model usw.  Fehlerbehebung
+2020-11-10  
+Anpassung X-Meter
+2020-05-03  
+Undefined subroutine &SolarEdge::ExprMppt (PBP)  
+2020-04-20  
+PBP  
+08.03.2020
+Anpassungen von CaptainRoot übernommen (Meter_1 mit aufgenommen)
+03.02.2019
+'poll' => 'once', für statische Werte => C_SunSpec_ID,C_Manufacturer,C_Version,C_SerialNumber,C_DeviceAddress,C_SunSpec_DID
+4.11.2018
+Readings: pv_energy pv_energytoday pv_energytoweek pv_energytomont ...
+29.11.2018
+MODEL = SolarEdge C_Model

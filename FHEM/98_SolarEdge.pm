@@ -1,5 +1,5 @@
 ##############################################
-# $Id: 98_SolarEdge.pm 0039 2020-07-12 17:54:00Z pejonp $
+# $Id: 98_SolarEdge.pm 0040 2020-10-12 17:54:00Z pejonp $
 #
 #	fhem Modul für Wechselrichter SolarEdge SE5K
 #	verwendet Modbus.pm als Basismodul für die eigentliche Implementation des Protokolls.
@@ -35,7 +35,8 @@
 # 2020-22-10  Apparent Power, Reactive Power, Power Factor, Reg Apparent Energy wieder mit aufgenommen
 # 2020-24-10  unpack angepasst
 # 2020-20-11  unpack Batterie repariert, Tabelle angepasst (mobile Ansicht verbessert) - beejayf
-# 2020-07-12  I_AC_Voltage angepasst, 2_Meter eingefuegt  
+# 2020-07-12  I_AC_Voltage angepasst, 2_Meter eingefuegt 
+# 2020-10-12  Register SOH & SOE  Batterie  
 
 
 
@@ -734,6 +735,20 @@ my %SolarEdgeBat1parseInfo = (
         'reading' => 'Battery_1_Instantaneous_Power_W',
     	'unpack'  => 'aaaa',
     	'expr' => 'unpack("f>", $val[2].$val[3].$val[0].$val[1])',
+    },
+    "h57730" => {     # E182(F582) 2R  Battery 1 State of Health (SOH)   Float32N/A
+    # Battery State of Health (SOH) calculated as Battery MaxEnergy\Battery RatedEnergy
+        'len'     => '2',  
+        'reading' => 'Battery_1_SOH',
+        'unpack'  => 'aaaa',
+        'expr' => 'unpack("f>", $val[2].$val[3].$val[0].$val[1])',
+    },
+    "h57732" => {     # E184(F584) 2R Battery 1 State of Energy (SOE)  Float32N/A
+    # Battery State of Energy (SOE) calculated as Battery AvailableEnergy\Battery MaxEnergy    
+        'len'     => '2',  
+        'reading' => 'Battery_1_SOE',
+        'unpack'  => 'aaaa',
+        'expr' => 'unpack("f>", $val[2].$val[3].$val[0].$val[1])',
     },
     "h57734" => {     # E186(F586) 2R Battery 1 Status Uint32 0-7
         'len'     => '2',  
