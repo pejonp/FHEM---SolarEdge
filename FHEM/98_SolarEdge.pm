@@ -1,5 +1,5 @@
 ##############################################
-# $Id: 98_SolarEdge.pm 0040 2020-10-12 17:54:00Z pejonp $
+# $Id: 98_SolarEdge.pm 0041 2020-28-12 17:54:00Z pejonp $
 #
 #	fhem Modul für Wechselrichter SolarEdge SE5K
 #	verwendet Modbus.pm als Basismodul für die eigentliche Implementation des Protokolls.
@@ -106,7 +106,6 @@ BEGIN {
           TimeNow
           Dispatch
           Initialize
-          ModbusLD_Initialize
           InitializeLD
           ReadingsTimestamp
            )
@@ -777,8 +776,7 @@ sub Initialize()
     #$hash->{AttrFn}     = \&Attr;
     $hash->{parseInfo}  = \%SolarEdgeparseInfoAll;    # defines registers for this Modbus Defive
     $hash->{deviceInfo} = \%SolarEdgedeviceInfo;      # defines properties of the device like
-    ModbusLD_Initialize($hash);        # Generic function of the Modbus module does the rest
-    #Modbus::InitializeLD($hash);                      # Generic function of the Modbus module does the rest
+    Modbus::InitializeLD($hash);                      # Generic function of the Modbus module does the rest
 
     $hash->{AttrList} =
         $hash->{AttrList}
