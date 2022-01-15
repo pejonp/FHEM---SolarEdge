@@ -1,5 +1,5 @@
 ##############################################
-# $Id: 98_SolarEdge.pm 0041 2020-28-12 17:54:00Z pejonp $
+# $Id: 98_SolarEdge.pm 0042 2022-15-01 17:54:00Z pejonp $
 #
 #	fhem Modul für Wechselrichter SolarEdge SE5K
 #	verwendet Modbus.pm als Basismodul für die eigentliche Implementation des Protokolls.
@@ -37,6 +37,7 @@
 # 2020-20-11  unpack Batterie repariert, Tabelle angepasst (mobile Ansicht verbessert) - beejayf
 # 2020-07-12  I_AC_Voltage angepasst, 2_Meter eingefuegt 
 # 2020-10-12  Register SOH & SOE  Batterie  
+# 2022-15-01  Reg Battery Status – Battery operating state: 0 – Off; 1 – Standby; 2 – Init; 3 – Charge; 4 – Discharge; 5 – Fault; 7 - Idle
 
 
 
@@ -749,11 +750,11 @@ my %SolarEdgeBat1parseInfo = (
         'unpack'  => 'aaaa',
         'expr' => 'unpack("f>", $val[2].$val[3].$val[0].$val[1])',
     },
-    "h57734" => {     # E186(F586) 2R Battery 1 Status Uint32 0-7
+    "h57734" => {     # E186(F586) 2R Battery 1 Status Uint32 0-7   Battery Status – Battery operating state: 0 – Off; 1 – Standby; 2 – Init; 3 – Charge; 4 – Discharge; 5 – Fault; 7 - Idle
         'len'     => '2',  
         'reading' => 'Battery_1_Status',
         'expr'    => '$val',
-        'map'     => '1:Aus, 3:Laden, 4:Entladen, 6:Erhaltungsladen',   # 1: Aus 3: Laden 4: Entladen 6: Erhaltungsladen
+        'map'     => '0:Aus, 1:Standby, 2:Init, 3:Laden, 4:Entladen, 5:Fehler, 6:Erhaltungsladen, 7:Idle',   # 0: Aus 3: Laden 4: Entladen 6: Erhaltungsladen
         'setexpr' => '$val',
     },
 );
