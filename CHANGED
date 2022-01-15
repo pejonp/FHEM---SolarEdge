@@ -1,3 +1,5 @@
+15.01.2022
+Reg Battery Status – Battery operating state: 0 – Off; 1 – Standby; 2 – Init; 3 – Charge; 4 – Discharge; 5 – Fault; 7 - Idle
 28.12.2020
 Anpassungen ModBus-Modul übernommen
 7.12.2020
